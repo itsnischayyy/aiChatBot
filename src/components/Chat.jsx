@@ -5,6 +5,7 @@ function Chat({ sessionId }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [instructionId, setInstructionId] = useState("1"); // Default instruction ID
+  const [customInstruction, setCustomInstruction] = useState(""); // State for manual input
   const [sending, setSending] = useState(false); // State to track if a message is being sent
 
   const chatBoxRef = useRef(null); // Reference for the chat box
@@ -28,9 +29,10 @@ function Chat({ sessionId }) {
     setSending(true); // Disable sending until response is received
 
     try {
+      const selectedInstructionId = customInstruction || instructionId; // Use custom input if provided
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat`, {
         session_id: sessionId,
-        instruction_id: instructionId,
+        instruction_id: selectedInstructionId,
         question: input,
       });
 
@@ -44,7 +46,6 @@ function Chat({ sessionId }) {
     setSending(false); // Re-enable sending after response is received
   };
 
-  // Function to handle "Enter" key press
   const handleKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault(); // Prevent default behavior (e.g., new line)
@@ -55,15 +56,27 @@ function Chat({ sessionId }) {
   return (
     <div className="chat-container">
       <div className="instruction-select">
-        <label>Select Instruction Set:</label>
-        <select
-          value={instructionId}
-          onChange={(e) => setInstructionId(e.target.value)}
-        >
-          <option value="1">Xtreme Hotel</option>
-          <option value="2">TrackGaddi</option>
-          <option value="3">Xtreme Thoughts</option>
-        </select>
+        <label>Select or Enter Instruction Set:</label>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <select
+            value={instructionId}
+            onChange={(e) => {
+              setInstructionId(e.target.value);
+              setCustomInstruction(""); // Clear custom input when dropdown is used
+            }}
+          >
+            <option value="1">Xtreme Hotel</option>
+            <option value="2">TrackGaddi</option>
+            <option value="3">Xtreme Thoughts</option>
+          </select>
+          <input
+            type="number"
+            value={customInstruction}
+            onChange={(e) => setCustomInstruction(e.target.value)}
+            placeholder="Enter ID"
+            style={{ width: "100px", padding: "5px", borderRadius: "4px", border: "1px solid #ccc" }}
+          />
+        </div>
       </div>
       <div className="chat-box" ref={chatBoxRef}>
         {messages.map((msg, index) => (
